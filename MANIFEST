@@ -6,4 +6,5 @@ MANIFEST.SKIP
 Switch.xs
 t/01compile.t
 t/02mapstart.t
+t/03given.t
 META.yml                                 Module meta-data (added by MakeMaker)
