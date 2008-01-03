@@ -4,4 +4,5 @@ Makefile.PL
 MANIFEST
 Switch.xs
 t/01compile.t
+t/02mapstart.t
 META.yml                                 Module meta-data (added by MakeMaker)

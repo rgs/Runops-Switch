@@ -341,11 +341,10 @@ int runops_switch(pTHX)
 	    case OP_REVERSE:
 		PL_op = Perl_pp_reverse(aTHX); break;
 	    case OP_GREPSTART:
+	    case OP_MAPSTART: /* pp_mapstart isn't used */
 		PL_op = Perl_pp_grepstart(aTHX); break;
 	    case OP_GREPWHILE:
 		PL_op = Perl_pp_grepwhile(aTHX); break;
-	    case OP_MAPSTART:
-		PL_op = Perl_pp_mapstart(aTHX); break;
 	    case OP_MAPWHILE:
 		PL_op = Perl_pp_mapwhile(aTHX); break;
 	    case OP_RANGE:

@@ -1,3 +1,7 @@
+0.03 - 06 Sep 2005
+    Handle the case of the mapstart op, which hasn't a pp function
+    corresponding to its type
+
 0.02 - 06 Sep 2005
     Inline some small hot ops, taking code from current bleadperl :
     null, stub, scalar, pushmark, const, gv, pushre, stringify, and, or,
