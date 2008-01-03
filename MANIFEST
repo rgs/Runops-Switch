@@ -2,6 +2,7 @@ Changes
 lib/Runops/Switch.pm
 Makefile.PL
 MANIFEST
+MANIFEST.SKIP
 Switch.xs
 t/01compile.t
 t/02mapstart.t
