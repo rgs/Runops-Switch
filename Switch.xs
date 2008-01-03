@@ -8,21 +8,37 @@ int runops_switch(pTHX)
     while (PL_op) {
 	switch (PL_op->op_type) {
 	    case OP_NULL:
-		PL_op = Perl_pp_null(aTHX); break;
+		PL_op = NORMAL; break;
 	    case OP_STUB:
-		PL_op = Perl_pp_stub(aTHX); break;
+		{
+		    dSP;
+		    if (GIMME_V == G_SCALAR)
+			XPUSHs(&PL_sv_undef);
+		    PUTBACK;
+		    PL_op = NORMAL;
+		}
+		break;
 	    case OP_SCALAR:
-		PL_op = Perl_pp_scalar(aTHX); break;
+		PL_op = NORMAL; break;
 	    case OP_PUSHMARK:
-		PL_op = Perl_pp_pushmark(aTHX); break;
+		PUSHMARK(PL_stack_sp);
+		PL_op = NORMAL;
+		break;
 	    case OP_WANTARRAY:
 		PL_op = Perl_pp_wantarray(aTHX); break;
 	    case OP_CONST:
-		PL_op = Perl_pp_const(aTHX); break;
+		{ dSP; XPUSHs(cSVOP_sv); PUTBACK; PL_op = NORMAL; }
+		break;
 	    case OP_GVSV:
 		PL_op = Perl_pp_gvsv(aTHX); break;
 	    case OP_GV:
-		PL_op = Perl_pp_gv(aTHX); break;
+		{
+		    dSP;
+		    XPUSHs((SV*)cGVOP_gv);
+		    PUTBACK;
+		    PL_op = NORMAL;
+		}
+		break;
 	    case OP_GELEM:
 		PL_op = Perl_pp_gelem(aTHX); break;
 	    case OP_PADSV:
@@ -34,7 +50,13 @@ int runops_switch(pTHX)
 	    case OP_PADANY:
 		PL_op = Perl_pp_padany(aTHX); break;
 	    case OP_PUSHRE:
-		PL_op = Perl_pp_pushre(aTHX); break;
+		{
+		    dSP;
+		    XPUSHs((SV*)PL_op);
+		    PUTBACK;
+		    PL_op = NORMAL;
+		}
+		break;
 	    case OP_RV2GV:
 		PL_op = Perl_pp_rv2gv(aTHX); break;
 	    case OP_RV2SV:
@@ -142,7 +164,14 @@ int runops_switch(pTHX)
 	    case OP_CONCAT:
 		PL_op = Perl_pp_concat(aTHX); break;
 	    case OP_STRINGIFY:
-		PL_op = Perl_pp_stringify(aTHX); break;
+		{
+		    dSP; dTARGET;
+		    sv_copypv(TARG,TOPs);
+		    SETTARG;
+		    PUTBACK;
+		    PL_op = NORMAL;
+		}
+		break;
 	    case OP_LEFT_SHIFT:
 		PL_op = Perl_pp_left_shift(aTHX); break;
 	    case OP_RIGHT_SHIFT:
@@ -326,13 +355,44 @@ int runops_switch(pTHX)
 	    case OP_FLOP:
 		PL_op = Perl_pp_flop(aTHX); break;
 	    case OP_AND:
-		PL_op = Perl_pp_and(aTHX); break;
+		{
+		    dSP;
+		    if (!SvTRUE(TOPs)) {
+			PUTBACK;
+			PL_op = NORMAL;
+		    }
+		    else {
+			--SP;
+			PUTBACK;
+			PL_op = cLOGOP->op_other;
+		    }
+		}
+		break;
 	    case OP_OR:
-		PL_op = Perl_pp_or(aTHX); break;
+		{
+		    dSP;
+		    if (SvTRUE(TOPs)) {
+			PUTBACK;
+			PL_op = NORMAL;
+		    }
+		    else {
+			--SP;
+			PUTBACK;
+			PL_op = cLOGOP->op_other;
+		    }
+		}
+		break;
 	    case OP_XOR:
 		PL_op = Perl_pp_xor(aTHX); break;
 	    case OP_COND_EXPR:
-		PL_op = Perl_pp_cond_expr(aTHX); break;
+		{
+		    dSP;
+		    if (SvTRUEx(POPs))
+			PUTBACK, PL_op = cLOGOP->op_other;
+		    else
+			PUTBACK, PL_op = cLOGOP->op_next;
+		}
+		break;
 	    case OP_ANDASSIGN:
 		PL_op = Perl_pp_andassign(aTHX); break;
 	    case OP_ORASSIGN:
@@ -356,11 +416,25 @@ int runops_switch(pTHX)
 	    case OP_LINESEQ:
 		PL_op = Perl_pp_lineseq(aTHX); break;
 	    case OP_NEXTSTATE:
-		PL_op = Perl_pp_nextstate(aTHX); break;
+		PL_curcop = (COP*)PL_op;
+		TAINT_NOT;		/* Each statement is presumed innocent */
+		PL_stack_sp = PL_stack_base + cxstack[cxstack_ix].blk_oldsp;
+		FREETMPS;
+		PL_op = NORMAL;
+		break;
 	    case OP_DBSTATE:
 		PL_op = Perl_pp_dbstate(aTHX); break;
 	    case OP_UNSTACK:
-		PL_op = Perl_pp_unstack(aTHX); break;
+		{
+		    I32 oldsave;
+		    TAINT_NOT;		/* Each statement is presumed innocent */
+		    PL_stack_sp = PL_stack_base + cxstack[cxstack_ix].blk_oldsp;
+		    FREETMPS;
+		    oldsave = PL_scopestack[PL_scopestack_ix - 1];
+		    LEAVE_SCOPE(oldsave);
+		    PL_op = NORMAL;
+		}
+		break;
 	    case OP_ENTER:
 		PL_op = Perl_pp_enter(aTHX); break;
 	    case OP_LEAVE:
@@ -706,7 +780,9 @@ int runops_switch(pTHX)
 	    case OP_THREADSV:
 		PL_op = Perl_pp_threadsv(aTHX); break;
 	    case OP_SETSTATE:
-		PL_op = Perl_pp_setstate(aTHX); break;
+		PL_curcop = (COP*)PL_op;
+		PL_op = NORMAL;
+		break;
 	    case OP_METHOD_NAMED:
 		PL_op = Perl_pp_method_named(aTHX); break;
 #if PERL_VERSION >= 9
