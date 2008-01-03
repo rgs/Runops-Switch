@@ -776,8 +776,10 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_syscall(aTHX); break;
 	    case OP_LOCK:
 		PL_op = Perl_pp_lock(aTHX); break;
+#if PERL_VERSION < 10
 	    case OP_THREADSV:
 		PL_op = Perl_pp_threadsv(aTHX); break;
+#endif
 	    case OP_SETSTATE:
 		PL_curcop = (COP*)PL_op;
 		PL_op = NORMAL;
