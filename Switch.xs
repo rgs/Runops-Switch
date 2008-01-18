@@ -792,6 +792,22 @@ int runops_switch(pTHX)
 	    case OP_DORASSIGN:
 		PL_op = Perl_pp_dorassign(aTHX); break;
 #endif
+#if PERL_VERSION >= 10
+	    case OP_ENTERGIVEN:
+		PL_op = Perl_pp_entergiven(aTHX); break;
+	    case OP_LEAVEGIVEN:
+		PL_op = Perl_pp_leavegiven(aTHX); break;
+	    case OP_ENTERWHEN:
+		PL_op = Perl_pp_enterwhen(aTHX); break;
+	    case OP_LEAVEWHEN:
+		PL_op = Perl_pp_leavewhen(aTHX); break;
+	    case OP_BREAK:
+		PL_op = Perl_pp_break(aTHX); break;
+	    case OP_CONTINUE:
+		PL_op = Perl_pp_continue(aTHX); break;
+	    case OP_SMARTMATCH:
+		PL_op = Perl_pp_smartmatch(aTHX); break;
+#endif
 	    case OP_CUSTOM:
 		PL_op = CALL_FPTR(PL_op->op_ppaddr)(aTHX); break;
 	    default:
