@@ -816,7 +816,7 @@ int runops_switch(pTHX)
 	    case OP_CUSTOM:
 		PL_op = CALL_FPTR(PL_op->op_ppaddr)(aTHX); break;
 	    default:
-		Perl_croak(aTHX_ "Invalid opcode %d\n", PL_op->op_type);
+		Perl_croak(aTHX_ "Invalid opcode '%s'\n", OP_NAME(PL_op));
 	}
 	PERL_ASYNC_CHECK();
     }
