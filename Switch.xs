@@ -499,6 +499,9 @@ int runops_switch(pTHX)
 	    case OP_PRTF:
 		PL_op = Perl_pp_prtf(aTHX); break;
 	    case OP_PRINT:
+#if PERL_VERSION >= 10
+	    case OP_SAY:
+#endif
 		PL_op = Perl_pp_print(aTHX); break;
 	    case OP_SYSOPEN:
 		PL_op = Perl_pp_sysopen(aTHX); break;
@@ -807,6 +810,8 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_continue(aTHX); break;
 	    case OP_SMARTMATCH:
 		PL_op = Perl_pp_smartmatch(aTHX); break;
+	    case OP_ONCE:
+		PL_op = Perl_pp_once(aTHX); break;
 #endif
 	    case OP_CUSTOM:
 		PL_op = CALL_FPTR(PL_op->op_ppaddr)(aTHX); break;
