@@ -52,13 +52,7 @@ int runops_switch(pTHX)
 	    case OP_PADANY:
 		PL_op = Perl_pp_padany(aTHX); break;
 	    case OP_PUSHRE:
-		{
-		    dSP;
-		    XPUSHs((SV*)PL_op);
-		    PUTBACK;
-		    PL_op = NORMAL;
-		}
-		break;
+		PL_op = Perl_pp_pushre(aTHX); break;
 	    case OP_RV2GV:
 		PL_op = Perl_pp_rv2gv(aTHX); break;
 	    case OP_RV2SV:
