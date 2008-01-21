@@ -8,6 +8,10 @@ int runops_switch(pTHX)
     while (PL_op) {
 	switch (PL_op->op_type) {
 	    case OP_NULL:
+	    case OP_SCALAR:
+	    case OP_SCOPE:
+	    case OP_LINESEQ:
+	    case OP_REGCMAYBE:
 		PL_op = NORMAL; break;
 	    case OP_STUB:
 		{
@@ -18,8 +22,6 @@ int runops_switch(pTHX)
 		    PL_op = NORMAL;
 		}
 		break;
-	    case OP_SCALAR:
-		PL_op = NORMAL; break;
 	    case OP_PUSHMARK:
 		PUSHMARK(PL_stack_sp);
 		PL_op = NORMAL;
@@ -85,8 +87,6 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_readline(aTHX); break;
 	    case OP_RCATLINE:
 		PL_op = Perl_pp_rcatline(aTHX); break;
-	    case OP_REGCMAYBE:
-		PL_op = Perl_pp_regcmaybe(aTHX); break;
 	    case OP_REGCRESET:
 		PL_op = Perl_pp_regcreset(aTHX); break;
 	    case OP_REGCOMP:
@@ -412,8 +412,6 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_die(aTHX); break;
 	    case OP_RESET:
 		PL_op = Perl_pp_reset(aTHX); break;
-	    case OP_LINESEQ:
-		PL_op = Perl_pp_lineseq(aTHX); break;
 	    case OP_NEXTSTATE:
 		PL_curcop = (COP*)PL_op;
 		TAINT_NOT;		/* Each statement is presumed innocent */
@@ -438,8 +436,6 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_enter(aTHX); break;
 	    case OP_LEAVE:
 		PL_op = Perl_pp_leave(aTHX); break;
-	    case OP_SCOPE:
-		PL_op = Perl_pp_scope(aTHX); break;
 	    case OP_ENTERITER:
 		PL_op = Perl_pp_enteriter(aTHX); break;
 	    case OP_ITER:
