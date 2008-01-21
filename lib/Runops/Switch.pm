@@ -3,7 +3,7 @@ package Runops::Switch;
 use strict;
 use warnings;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use DynaLoader ();
 our @ISA = qw(DynaLoader);
