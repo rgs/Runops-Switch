@@ -698,9 +698,8 @@ int runops_switch(pTHX)
 	    case OP_SEMOP:
 		PL_op = Perl_pp_semop(aTHX); break;
 	    case OP_REQUIRE:
-		PL_op = Perl_pp_require(aTHX); break;
 	    case OP_DOFILE:
-		PL_op = Perl_pp_dofile(aTHX); break;
+		PL_op = Perl_pp_require(aTHX); break;
 	    case OP_ENTEREVAL:
 		PL_op = Perl_pp_entereval(aTHX); break;
 	    case OP_LEAVEEVAL:
