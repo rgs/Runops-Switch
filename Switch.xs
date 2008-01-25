@@ -802,6 +802,13 @@ int runops_switch(pTHX)
 	    case OP_ONCE:
 		PL_op = Perl_pp_once(aTHX); break;
 #endif
+#if PERL_VERSION >= 11
+	    case OP_AEACH:
+		PL_op = Perl_pp_aeach(aTHX); break;
+	    case OP_AKEYS:
+	    case OP_AVALUES:
+		PL_op = Perl_pp_akeys(aTHX); break;
+#endif
 	    case OP_CUSTOM:
 		PL_op = CALL_FPTR(PL_op->op_ppaddr)(aTHX); break;
 	    default:
