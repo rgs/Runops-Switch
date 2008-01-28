@@ -28,6 +28,14 @@ This module provides an alternate runops loop. It's based on a large switch
 statement, instead of function pointer calls like the regular perl one (in
 F<run.c> in the perl source code.) I wrote it for benchmarking purposes.
 
+=head1 KNOWN PROBLEMS
+
+This module calls directly the C<pp_*> functions from the Perl interpreter (not
+through a function pointer). Since those functions aren't part of the public
+Perl API, they won't be available unless you happen to run an OS that exports
+every symbol by default (such as Linux). Notably, this module does not compile
+on Windows.
+
 =head1 AUTHOR
 
 Written by Rafael Garcia-Suarez, based on an idea that Nicholas Clark had while
