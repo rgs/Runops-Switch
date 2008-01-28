@@ -772,10 +772,12 @@ int runops_switch(pTHX)
 	    case OP_THREADSV:
 		PL_op = Perl_pp_threadsv(aTHX); break;
 #endif
+#if PERL_VERSION < 11
 	    case OP_SETSTATE:
 		PL_curcop = (COP*)PL_op;
 		PL_op = NORMAL;
 		break;
+#endif
 	    case OP_METHOD_NAMED:
 		PL_op = Perl_pp_method_named(aTHX); break;
 #if PERL_VERSION >= 9
