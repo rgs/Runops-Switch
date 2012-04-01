@@ -28,13 +28,22 @@ This module provides an alternate runops loop. It's based on a large switch
 statement, instead of function pointer calls like the regular perl one (in
 F<run.c> in the perl source code.) I wrote it for benchmarking purposes.
 
+As dynamic extension there is no notable speedup measurable.
+
+516 non-threaded:
+
+    $ ./TEST op/*.t
+    u=0.46 s=0.06 cu=16.27 cs=0.95 scripts=182 tests=47170
+    $ PERL5OPT_TEST=-MRunops::Switch ./TEST op/.t
+    u=0.49 s=0.02 cu=16.39 cs=0.83 scripts=182 tests=47170 (dynamic_ext overhead)
+
 =head1 KNOWN PROBLEMS
 
 This module calls directly the C<pp_*> functions from the Perl interpreter (not
 through a function pointer). Since those functions aren't part of the public
 Perl API, they won't be available unless you happen to run an OS that exports
-every symbol by default (such as Linux). Notably, this module does not compile
-on Windows.
+every symbol by default (such as Linux without C<PERL_DL_NONLAZY> set).
+Notably, this module does not compile on Windows.
 
 =head1 AUTHOR
 
