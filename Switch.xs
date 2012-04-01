@@ -846,6 +846,8 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_once(aTHX); break;
 #endif
 #if PERL_VERSION >= 11
+	    case OP_BOOLKEYS:
+		PL_op = Perl_pp_boolkeys(aTHX); break;
 	    case OP_HINTSEVAL:
 		PL_op = Perl_pp_hintseval(aTHX); break;
 	    case OP_AEACH:
