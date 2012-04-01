@@ -757,7 +757,6 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_sprotoent(aTHX); break;
 	    case OP_SSERVENT:
 		PL_op = Perl_pp_sservent(aTHX); break;
-	    /* 5.15 implements the next as pp_ehostent */
 	    case OP_ENETENT:
 #if PERL_VERSION < 15
 		PL_op = Perl_pp_enetent(aTHX); break;
@@ -788,21 +787,24 @@ int runops_switch(pTHX)
 #endif
 	    case OP_EHOSTENT:
 		PL_op = Perl_pp_ehostent(aTHX); break;
-	    /* end of pp_ehostent */
-	    /* 5.15 implements the next as pp_gpwent */
 	    case OP_GPWUID:
+#if PERL_VERSION < 9
 		PL_op = Perl_pp_gpwuid(aTHX); break;
+#endif
 	    case OP_GPWNAM:
+#if PERL_VERSION < 9
 		PL_op = Perl_pp_gpwnam(aTHX); break;
-	    /* end of pp_gpwent */
+#endif
 	    case OP_GPWENT:
 		PL_op = Perl_pp_gpwent(aTHX); break;
 	    case OP_GGRNAM:
+#if PERL_VERSION < 9
 		PL_op = Perl_pp_ggrnam(aTHX); break;
-	    case OP_GGRGID:
-		PL_op = Perl_pp_ggrgid(aTHX); break;
+#endif
 	    case OP_GGRENT:
 		PL_op = Perl_pp_ggrent(aTHX); break;
+	    case OP_GGRGID:
+		PL_op = Perl_pp_ggrgid(aTHX); break;
 	    case OP_GETLOGIN:
 		PL_op = Perl_pp_getlogin(aTHX); break;
 	    case OP_SYSCALL:
@@ -881,7 +883,7 @@ int runops_switch(pTHX)
 	    default:
 		Perl_croak(aTHX_ "Invalid opcode '%s'\n", OP_NAME(PL_op));
 	}
-#if (PERL_VERSION < 13) || ((PERL_VERSION == 13) && (PERL_SUBVERSION < 2))
+#if PERL_VERSION < 13
 	PERL_ASYNC_CHECK();
 #endif
     }
