@@ -1,10 +1,30 @@
 #define PERL_NO_GET_CONTEXT
+#define PERL_CORE
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
 
 int runops_switch(pTHX)
 {
+    DEBUG_l(Perl_deb(aTHX_ "Entering new RUNOPS level (Runops::Switch)\n"));
+    if (PL_debug) {
+      if (PL_watchaddr && (*PL_watchaddr != PL_watchok))
+	PerlIO_printf(Perl_debug_log,
+		      "WARNING: %"UVxf" changed from %"UVxf" to %"UVxf"\n",
+		      PTR2UV(PL_watchaddr), PTR2UV(PL_watchok),
+		      PTR2UV(*PL_watchaddr));
+#if defined(DEBUGGING) \
+  && !(defined(_WIN32) || (defined(__CYGWIN__) && (__GNUC__ > 3)) || defined(AIX))
+# if (PERL_VERSION > 7)
+      if (DEBUG_s_TEST_) debstack();
+      if (DEBUG_t_TEST_) debop(PL_op);
+# else
+      DEBUG_s(debstack());
+      DEBUG_t(debop(PL_op));
+# endif
+#endif
+    }
+
     while (PL_op) {
 	switch (PL_op->op_type) {
 	    case OP_NULL:
@@ -811,18 +831,43 @@ int runops_switch(pTHX)
 	    case OP_AVALUES:
 		PL_op = Perl_pp_akeys(aTHX); break;
 #endif
+#if PERL_VERSION >= 13
+	    case OP_REACH:
+	    case OP_RKEYS:
+	    case OP_RVALUES:
+		PL_op = Perl_pp_rkeys(aTHX); break;
+	    case OP_TRANSR:
+		PL_op = Perl_pp_transr(aTHX); break;
+#endif
+#if PERL_VERSION >= 15
+	    case OP_COREARGS:
+		PL_op = Perl_pp_coreargs(aTHX); break;
+	    case OP_RUNCV:
+		PL_op = Perl_pp_runcv(aTHX); break;
+	    case OP_FC:
+		PL_op = Perl_pp_fc(aTHX); break;
+#endif
 	    case OP_CUSTOM:
+#if PERL_VERSION >= 13
+		PL_op = (*PL_op->op_ppaddr)(aTHX); break;
+#else
 		PL_op = CALL_FPTR(PL_op->op_ppaddr)(aTHX); break;
+#endif
 	    default:
 		Perl_croak(aTHX_ "Invalid opcode '%s'\n", OP_NAME(PL_op));
 	}
+#if (PERL_VERSION < 13) || ((PERL_VERSION == 13) && (PERL_SUBVERSION < 2))
 	PERL_ASYNC_CHECK();
+#endif
     }
+
     TAINT_NOT;
     return 0;
 }
 
 MODULE = Runops::Switch PACKAGE = Runops::Switch
+
+PROTOTYPES: DISABLE
 
 BOOT:
     PL_runops = runops_switch;

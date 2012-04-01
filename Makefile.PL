@@ -14,3 +14,10 @@ WriteMakefile(
     VERSION_FROM	=> 'lib/Runops/Switch.pm',
     LICENSE		=> 'perl',
 );
+
+package MY;
+sub test {
+  local $_ = shift->SUPER::test(@_);
+  s/PERL_DL_NONLAZY=1 //g;
+  return $_;
+}
