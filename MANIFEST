@@ -3,6 +3,7 @@ lib/Runops/Switch.pm
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
+README
 Switch.xs
 t/01compile.t
 t/02mapstart.t

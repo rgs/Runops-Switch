@@ -21,3 +21,9 @@ sub test {
   s/PERL_DL_NONLAZY=1 //g;
   return $_;
 }
+sub depend {
+  "
+README : \$(VERSION_FROM)
+	pod2text \$(VERSION_FROM) > README
+"
+}
