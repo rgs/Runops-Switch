@@ -302,6 +302,9 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_quotemeta(aTHX); break;
 	    case OP_RV2AV:
 		PL_op = Perl_pp_rv2av(aTHX); break;
+#if PERL_VERSION >= 15
+	    case OP_AELEMFAST_LEX:
+#endif
 	    case OP_AELEMFAST:
 		PL_op = Perl_pp_aelemfast(aTHX); break;
 	    case OP_AELEM:
@@ -754,34 +757,52 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_sprotoent(aTHX); break;
 	    case OP_SSERVENT:
 		PL_op = Perl_pp_sservent(aTHX); break;
+	    /* 5.15 implements the next as pp_ehostent */
+	    case OP_ENETENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_enetent(aTHX); break;
+#endif
+	    case OP_EPROTOENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_eprotoent(aTHX); break;
+#endif
+	    case OP_ESERVENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_eservent(aTHX); break;
+#endif
+	    case OP_SPWENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_spwent(aTHX); break;
+#endif
+	    case OP_EPWENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_epwent(aTHX); break;
+#endif
+	    case OP_EGRENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_egrent(aTHX); break;
+#endif
+	    case OP_SGRENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_sgrent(aTHX); break;
+#endif
 	    case OP_EHOSTENT:
 		PL_op = Perl_pp_ehostent(aTHX); break;
-	    case OP_ENETENT:
-		PL_op = Perl_pp_enetent(aTHX); break;
-	    case OP_EPROTOENT:
-		PL_op = Perl_pp_eprotoent(aTHX); break;
-	    case OP_ESERVENT:
-		PL_op = Perl_pp_eservent(aTHX); break;
-	    case OP_GPWNAM:
-		PL_op = Perl_pp_gpwnam(aTHX); break;
+	    /* end of pp_ehostent */
+	    /* 5.15 implements the next as pp_gpwent */
 	    case OP_GPWUID:
 		PL_op = Perl_pp_gpwuid(aTHX); break;
+	    case OP_GPWNAM:
+		PL_op = Perl_pp_gpwnam(aTHX); break;
+	    /* end of pp_gpwent */
 	    case OP_GPWENT:
 		PL_op = Perl_pp_gpwent(aTHX); break;
-	    case OP_SPWENT:
-		PL_op = Perl_pp_spwent(aTHX); break;
-	    case OP_EPWENT:
-		PL_op = Perl_pp_epwent(aTHX); break;
 	    case OP_GGRNAM:
 		PL_op = Perl_pp_ggrnam(aTHX); break;
 	    case OP_GGRGID:
 		PL_op = Perl_pp_ggrgid(aTHX); break;
 	    case OP_GGRENT:
 		PL_op = Perl_pp_ggrent(aTHX); break;
-	    case OP_SGRENT:
-		PL_op = Perl_pp_sgrent(aTHX); break;
-	    case OP_EGRENT:
-		PL_op = Perl_pp_egrent(aTHX); break;
 	    case OP_GETLOGIN:
 		PL_op = Perl_pp_getlogin(aTHX); break;
 	    case OP_SYSCALL:
@@ -825,6 +846,8 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_once(aTHX); break;
 #endif
 #if PERL_VERSION >= 11
+	    case OP_HINTSEVAL:
+		PL_op = Perl_pp_hintseval(aTHX); break;
 	    case OP_AEACH:
 		PL_op = Perl_pp_aeach(aTHX); break;
 	    case OP_AKEYS:
