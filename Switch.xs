@@ -373,6 +373,9 @@ int runops_switch(pTHX)
 	    case OP_AND:
 		{
 		    dSP;
+#if PERL_VERSION < 13
+		    PERL_ASYNC_CHECK();
+#endif
 		    if (!SvTRUE(TOPs)) {
 			PUTBACK;
 			PL_op = NORMAL;
@@ -387,13 +390,16 @@ int runops_switch(pTHX)
 	    case OP_OR:
 		{
 		    dSP;
+#if PERL_VERSION < 13
+		    PERL_ASYNC_CHECK();
+#endif
 		    if (SvTRUE(TOPs)) {
-			PUTBACK;
+		        PUTBACK;
 			PL_op = NORMAL;
 		    }
 		    else {
 			--SP;
-			PUTBACK;
+		        PUTBACK;
 			PL_op = cLOGOP->op_other;
 		    }
 		}
@@ -403,6 +409,9 @@ int runops_switch(pTHX)
 	    case OP_COND_EXPR:
 		{
 		    dSP;
+#if PERL_VERSION < 13
+		    PERL_ASYNC_CHECK();
+#endif
 		    if (SvTRUEx(POPs))
 			PUTBACK, PL_op = cLOGOP->op_other;
 		    else
@@ -431,6 +440,9 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_reset(aTHX); break;
 	    case OP_NEXTSTATE:
 		PL_curcop = (COP*)PL_op;
+#if PERL_VERSION < 13
+		PERL_ASYNC_CHECK();
+#endif
 		TAINT_NOT;		/* Each statement is presumed innocent */
 		PL_stack_sp = PL_stack_base + cxstack[cxstack_ix].blk_oldsp;
 		FREETMPS;
@@ -441,11 +453,21 @@ int runops_switch(pTHX)
 	    case OP_UNSTACK:
 		{
 		    I32 oldsave;
+#if PERL_VERSION < 13
+		    PERL_ASYNC_CHECK();
+#endif
 		    TAINT_NOT;		/* Each statement is presumed innocent */
 		    PL_stack_sp = PL_stack_base + cxstack[cxstack_ix].blk_oldsp;
 		    FREETMPS;
+#if PERL_VERSION >= 13
+		    if (!(PL_op->op_flags & OPf_SPECIAL)) {
+		        oldsave = PL_scopestack[PL_scopestack_ix - 1];
+		        LEAVE_SCOPE(oldsave);
+		    }
+#else
 		    oldsave = PL_scopestack[PL_scopestack_ix - 1];
 		    LEAVE_SCOPE(oldsave);
+#endif
 		    PL_op = NORMAL;
 		}
 		break;
