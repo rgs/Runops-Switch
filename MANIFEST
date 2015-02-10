@@ -11,4 +11,6 @@ t/03given.t
 t/04features.t
 t/05printtofh.t
 t/06pp_aeach.t
-META.yml                                 Module meta-data (added by MakeMaker)
+t/alarm.t
+t/fork.t
+t/sigdispatch.t

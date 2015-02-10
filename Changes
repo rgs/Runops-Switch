@@ -1,3 +1,6 @@
+0.06 - 10 Feb 2015
+    - Update new ops for Perl 5.16 - 5.22.
+
 0.05 - 1 Apr 2012
     - Update new ops, new runops loop for Perl 5.12 - 5.16.
     - Do not use PERL_DL_NONLAZY=1
