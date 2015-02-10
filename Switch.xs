@@ -4,29 +4,33 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#define CASE_OP(NAME,name)  \
+	    case OP_##NAME: \
+		PL_op = Perl_pp_##name(aTHX); break
+
 int runops_switch(pTHX)
 {
     DEBUG_l(Perl_deb(aTHX_ "Entering new RUNOPS level (Runops::Switch)\n"));
-    if (PL_debug) {
-      if (PL_watchaddr && (*PL_watchaddr != PL_watchok))
-	PerlIO_printf(Perl_debug_log,
+    do {
+      if (PL_debug) {
+	if (PL_watchaddr && (*PL_watchaddr != PL_watchok))
+	  PerlIO_printf(Perl_debug_log,
 		      "WARNING: %"UVxf" changed from %"UVxf" to %"UVxf"\n",
 		      PTR2UV(PL_watchaddr), PTR2UV(PL_watchok),
 		      PTR2UV(*PL_watchaddr));
 #if defined(DEBUGGING) \
   && !(defined(_WIN32) || (defined(__CYGWIN__) && (__GNUC__ > 3)) || defined(AIX))
 # if (PERL_VERSION > 7)
-      if (DEBUG_s_TEST_) debstack();
-      if (DEBUG_t_TEST_) debop(PL_op);
+	if (DEBUG_s_TEST_) debstack();
+	if (DEBUG_t_TEST_) debop(PL_op);
 # else
-      DEBUG_s(debstack());
-      DEBUG_t(debop(PL_op));
+	DEBUG_s(debstack());
+	DEBUG_t(debop(PL_op));
 # endif
 #endif
-    }
+      }
 
-    while (PL_op) {
-	switch (PL_op->op_type) {
+      switch (PL_op->op_type) {
 	    case OP_NULL:
 	    case OP_SCALAR:
 	    case OP_SCOPE:
@@ -870,8 +874,10 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_once(aTHX); break;
 #endif
 #if PERL_VERSION >= 11
-	    case OP_BOOLKEYS:
+# if PERL_VERSION < 18
+            case OP_BOOLKEYS:
 		PL_op = Perl_pp_boolkeys(aTHX); break;
+# endif
 	    case OP_HINTSEVAL:
 		PL_op = Perl_pp_hintseval(aTHX); break;
 	    case OP_AEACH:
@@ -896,6 +902,14 @@ int runops_switch(pTHX)
 	    case OP_FC:
 		PL_op = Perl_pp_fc(aTHX); break;
 #endif
+#if PERL_VERSION >= 19
+            CASE_OP(PADRANGE, padrange);
+#endif
+#if PERL_VERSION >= 21
+            CASE_OP(MULTIDEREF, multideref);
+            CASE_OP(METHOD_SUPER, method_super);
+            CASE_OP(METHOD_REDIR, method_redir);
+#endif
 	    case OP_CUSTOM:
 #if PERL_VERSION >= 13
 		PL_op = (*PL_op->op_ppaddr)(aTHX); break;
@@ -906,9 +920,9 @@ int runops_switch(pTHX)
 		Perl_croak(aTHX_ "Invalid opcode '%s'\n", OP_NAME(PL_op));
 	}
 #if PERL_VERSION < 13
-	PERL_ASYNC_CHECK();
+        PERL_ASYNC_CHECK();
 #endif
-    }
+    } while (PL_op);
 
     TAINT_NOT;
     return 0;
