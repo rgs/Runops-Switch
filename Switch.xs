@@ -1,12 +1,36 @@
 #define PERL_NO_GET_CONTEXT
+#define PERL_CORE
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
 
+#define CASE_OP(NAME,name)  \
+	    case OP_##NAME: \
+		PL_op = Perl_pp_##name(aTHX); break
+
 int runops_switch(pTHX)
 {
-    while (PL_op) {
-	switch (PL_op->op_type) {
+    DEBUG_l(Perl_deb(aTHX_ "Entering new RUNOPS level (Runops::Switch)\n"));
+    do {
+      if (PL_debug) {
+	if (PL_watchaddr && (*PL_watchaddr != PL_watchok))
+	  PerlIO_printf(Perl_debug_log,
+		      "WARNING: %"UVxf" changed from %"UVxf" to %"UVxf"\n",
+		      PTR2UV(PL_watchaddr), PTR2UV(PL_watchok),
+		      PTR2UV(*PL_watchaddr));
+#if defined(DEBUGGING) \
+  && !(defined(_WIN32) || (defined(__CYGWIN__) && (__GNUC__ > 3)) || defined(AIX))
+# if (PERL_VERSION > 7)
+	if (DEBUG_s_TEST_) debstack();
+	if (DEBUG_t_TEST_) debop(PL_op);
+# else
+	DEBUG_s(debstack());
+	DEBUG_t(debop(PL_op));
+# endif
+#endif
+      }
+
+      switch (PL_op->op_type) {
 	    case OP_NULL:
 	    case OP_SCALAR:
 	    case OP_SCOPE:
@@ -282,6 +306,9 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_quotemeta(aTHX); break;
 	    case OP_RV2AV:
 		PL_op = Perl_pp_rv2av(aTHX); break;
+#if PERL_VERSION >= 15
+	    case OP_AELEMFAST_LEX:
+#endif
 	    case OP_AELEMFAST:
 		PL_op = Perl_pp_aelemfast(aTHX); break;
 	    case OP_AELEM:
@@ -350,6 +377,9 @@ int runops_switch(pTHX)
 	    case OP_AND:
 		{
 		    dSP;
+#if PERL_VERSION < 13
+		    PERL_ASYNC_CHECK();
+#endif
 		    if (!SvTRUE(TOPs)) {
 			PUTBACK;
 			PL_op = NORMAL;
@@ -364,13 +394,16 @@ int runops_switch(pTHX)
 	    case OP_OR:
 		{
 		    dSP;
+#if PERL_VERSION < 13
+		    PERL_ASYNC_CHECK();
+#endif
 		    if (SvTRUE(TOPs)) {
-			PUTBACK;
+		        PUTBACK;
 			PL_op = NORMAL;
 		    }
 		    else {
 			--SP;
-			PUTBACK;
+		        PUTBACK;
 			PL_op = cLOGOP->op_other;
 		    }
 		}
@@ -380,6 +413,9 @@ int runops_switch(pTHX)
 	    case OP_COND_EXPR:
 		{
 		    dSP;
+#if PERL_VERSION < 13
+		    PERL_ASYNC_CHECK();
+#endif
 		    if (SvTRUEx(POPs))
 			PUTBACK, PL_op = cLOGOP->op_other;
 		    else
@@ -408,6 +444,9 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_reset(aTHX); break;
 	    case OP_NEXTSTATE:
 		PL_curcop = (COP*)PL_op;
+#if PERL_VERSION < 13
+		PERL_ASYNC_CHECK();
+#endif
 		TAINT_NOT;		/* Each statement is presumed innocent */
 		PL_stack_sp = PL_stack_base + cxstack[cxstack_ix].blk_oldsp;
 		FREETMPS;
@@ -418,11 +457,21 @@ int runops_switch(pTHX)
 	    case OP_UNSTACK:
 		{
 		    I32 oldsave;
+#if PERL_VERSION < 13
+		    PERL_ASYNC_CHECK();
+#endif
 		    TAINT_NOT;		/* Each statement is presumed innocent */
 		    PL_stack_sp = PL_stack_base + cxstack[cxstack_ix].blk_oldsp;
 		    FREETMPS;
+#if PERL_VERSION >= 13
+		    if (!(PL_op->op_flags & OPf_SPECIAL)) {
+		        oldsave = PL_scopestack[PL_scopestack_ix - 1];
+		        LEAVE_SCOPE(oldsave);
+		    }
+#else
 		    oldsave = PL_scopestack[PL_scopestack_ix - 1];
 		    LEAVE_SCOPE(oldsave);
+#endif
 		    PL_op = NORMAL;
 		}
 		break;
@@ -734,34 +783,54 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_sprotoent(aTHX); break;
 	    case OP_SSERVENT:
 		PL_op = Perl_pp_sservent(aTHX); break;
+	    case OP_ENETENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_enetent(aTHX); break;
+#endif
+	    case OP_EPROTOENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_eprotoent(aTHX); break;
+#endif
+	    case OP_ESERVENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_eservent(aTHX); break;
+#endif
+	    case OP_SPWENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_spwent(aTHX); break;
+#endif
+	    case OP_EPWENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_epwent(aTHX); break;
+#endif
+	    case OP_EGRENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_egrent(aTHX); break;
+#endif
+	    case OP_SGRENT:
+#if PERL_VERSION < 15
+		PL_op = Perl_pp_sgrent(aTHX); break;
+#endif
 	    case OP_EHOSTENT:
 		PL_op = Perl_pp_ehostent(aTHX); break;
-	    case OP_ENETENT:
-		PL_op = Perl_pp_enetent(aTHX); break;
-	    case OP_EPROTOENT:
-		PL_op = Perl_pp_eprotoent(aTHX); break;
-	    case OP_ESERVENT:
-		PL_op = Perl_pp_eservent(aTHX); break;
-	    case OP_GPWNAM:
-		PL_op = Perl_pp_gpwnam(aTHX); break;
 	    case OP_GPWUID:
+#if PERL_VERSION < 9
 		PL_op = Perl_pp_gpwuid(aTHX); break;
+#endif
+	    case OP_GPWNAM:
+#if PERL_VERSION < 9
+		PL_op = Perl_pp_gpwnam(aTHX); break;
+#endif
 	    case OP_GPWENT:
 		PL_op = Perl_pp_gpwent(aTHX); break;
-	    case OP_SPWENT:
-		PL_op = Perl_pp_spwent(aTHX); break;
-	    case OP_EPWENT:
-		PL_op = Perl_pp_epwent(aTHX); break;
 	    case OP_GGRNAM:
+#if PERL_VERSION < 9
 		PL_op = Perl_pp_ggrnam(aTHX); break;
-	    case OP_GGRGID:
-		PL_op = Perl_pp_ggrgid(aTHX); break;
+#endif
 	    case OP_GGRENT:
 		PL_op = Perl_pp_ggrent(aTHX); break;
-	    case OP_SGRENT:
-		PL_op = Perl_pp_sgrent(aTHX); break;
-	    case OP_EGRENT:
-		PL_op = Perl_pp_egrent(aTHX); break;
+	    case OP_GGRGID:
+		PL_op = Perl_pp_ggrgid(aTHX); break;
 	    case OP_GETLOGIN:
 		PL_op = Perl_pp_getlogin(aTHX); break;
 	    case OP_SYSCALL:
@@ -805,24 +874,63 @@ int runops_switch(pTHX)
 		PL_op = Perl_pp_once(aTHX); break;
 #endif
 #if PERL_VERSION >= 11
+# if PERL_VERSION < 18
+            case OP_BOOLKEYS:
+		PL_op = Perl_pp_boolkeys(aTHX); break;
+# endif
+	    case OP_HINTSEVAL:
+		PL_op = Perl_pp_hintseval(aTHX); break;
 	    case OP_AEACH:
 		PL_op = Perl_pp_aeach(aTHX); break;
 	    case OP_AKEYS:
 	    case OP_AVALUES:
 		PL_op = Perl_pp_akeys(aTHX); break;
 #endif
+#if PERL_VERSION >= 13
+	    case OP_REACH:
+	    case OP_RKEYS:
+	    case OP_RVALUES:
+		PL_op = Perl_pp_rkeys(aTHX); break;
+	    case OP_TRANSR:
+		PL_op = Perl_pp_transr(aTHX); break;
+#endif
+#if PERL_VERSION >= 15
+	    case OP_COREARGS:
+		PL_op = Perl_pp_coreargs(aTHX); break;
+	    case OP_RUNCV:
+		PL_op = Perl_pp_runcv(aTHX); break;
+	    case OP_FC:
+		PL_op = Perl_pp_fc(aTHX); break;
+#endif
+#if PERL_VERSION >= 19
+            CASE_OP(PADRANGE, padrange);
+#endif
+#if PERL_VERSION >= 21
+            CASE_OP(MULTIDEREF, multideref);
+            CASE_OP(METHOD_SUPER, method_super);
+            CASE_OP(METHOD_REDIR, method_redir);
+#endif
 	    case OP_CUSTOM:
+#if PERL_VERSION >= 13
+		PL_op = (*PL_op->op_ppaddr)(aTHX); break;
+#else
 		PL_op = CALL_FPTR(PL_op->op_ppaddr)(aTHX); break;
+#endif
 	    default:
 		Perl_croak(aTHX_ "Invalid opcode '%s'\n", OP_NAME(PL_op));
 	}
-	PERL_ASYNC_CHECK();
-    }
+#if PERL_VERSION < 13
+        PERL_ASYNC_CHECK();
+#endif
+    } while (PL_op);
+
     TAINT_NOT;
     return 0;
 }
 
 MODULE = Runops::Switch PACKAGE = Runops::Switch
+
+PROTOTYPES: DISABLE
 
 BOOT:
     PL_runops = runops_switch;
